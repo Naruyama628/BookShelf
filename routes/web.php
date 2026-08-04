@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 // 書籍一覧（トップ）
 // 公開ページ。全書籍をページネーション（10件/ページ）で最新順に表示。
 Route::get('/', function () {
-    return view('auth/login');
+    return view('auth/register');
 });
 
 // 書籍詳細
