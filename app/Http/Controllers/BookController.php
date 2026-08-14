@@ -41,6 +41,8 @@ class BookController extends Controller
     // 書籍編集画面
     public function edit(Book $book) : View
     {
+        $this->authorize('update', $book);
+
         $book->load([
             'genres',
         ]);
@@ -67,6 +69,8 @@ class BookController extends Controller
 
     // 書籍の更新処理
     public function update(Book $book, Request $request) : RedirectResponse {
+        $this->authorize('update', $book);
+
         $book->update([
             'title' => $request->title,
             'author' => $request->author,
@@ -77,6 +81,18 @@ class BookController extends Controller
         ]);
         $book->genres()->sync($request->genres);
 
+        return redirect()->route('books.index');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Book $book)
+    {
+        //
+        $this->authorize('delete', $book);
+        
+        $book->delete();
         return redirect()->route('books.index');
     }
 }
