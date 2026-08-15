@@ -6,13 +6,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Book;
 use App\Models\Review;
+use App\Http\Requests\StoreReviewRequest;
+use App\Http\Requests\UpdateReviewRequest;
 
 class ReviewController extends Controller
 {
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Book $book)
+    public function store(StoreReviewRequest $request, Book $book)
     {
         //
         Review::create([
@@ -36,7 +38,7 @@ class ReviewController extends Controller
         return view('reviews.edit', compact('review'));
     }
 
-    public function update(Request $request, Review $review)
+    public function update(UpdateReviewRequest $request, Review $review)
     {
         //
         $this->authorize('update', $review);
