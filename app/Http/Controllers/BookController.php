@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreBookRequest;
+use App\Http\Requests\UpdateBookRequest;
 use App\Models\Book;
 use App\Models\Genre;
 use Illuminate\Support\Facades\Auth;
@@ -52,7 +54,7 @@ class BookController extends Controller
     }
 
     // 書籍の登録処理
-    public function store(Request $request) : RedirectResponse {
+    public function store(StoreBookRequest $request) : RedirectResponse {
         $book = Book::create([
             'title' => $request->title,
             'author' => $request->author,
@@ -68,7 +70,7 @@ class BookController extends Controller
     }
 
     // 書籍の更新処理
-    public function update(Book $book, Request $request) : RedirectResponse {
+    public function update(Book $book, UpdateBookRequest $request) : RedirectResponse {
         $this->authorize('update', $book);
 
         $book->update([
@@ -91,7 +93,7 @@ class BookController extends Controller
     {
         //
         $this->authorize('delete', $book);
-        
+
         $book->delete();
         return redirect()->route('books.index');
     }
