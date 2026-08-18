@@ -11,9 +11,7 @@ use App\Http\Requests\UpdateReviewRequest;
 
 class ReviewController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     */
+    // レビュー登録処理
     public function store(StoreReviewRequest $request, Book $book)
     {
         //
@@ -24,12 +22,11 @@ class ReviewController extends Controller
             'comment' => $request->comment,
         ]);
 
-        return back();
+        return back()
+            ->with('success', 'レビューを登録しました');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    // レビュー編集画面
     public function edit(Review $review)
     {
         //
@@ -38,6 +35,7 @@ class ReviewController extends Controller
         return view('reviews.edit', compact('review'));
     }
 
+    // レビュー編集処理
     public function update(UpdateReviewRequest $request, Review $review)
     {
         //
@@ -47,15 +45,18 @@ class ReviewController extends Controller
             'rating' => $request->rating,
             'comment' => $request->comment,
         ]);
-        return redirect()->route('books.show', $review->book);
+        return redirect()->route('books.show', $review->book)
+            ->with('success', 'レビューを編集しました');
     }
 
+    // レビュー削除処理
     public function destroy(Review $review)
     {
         //
         $this->authorize('delete', $review);
         
         $review->delete();
-        return back();
+        return back()
+        ->with('success', 'レビューを削除しました');
     }
 }

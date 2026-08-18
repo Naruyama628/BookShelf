@@ -48,8 +48,8 @@ class StoreReviewRequest extends FormRequest
         return [
             'user_id.unique' => 'この書籍にはすでにレビューを投稿しています',
             
-            'rating.required' => '評価は1～5で選択してください',
-            'rating.between' => '評価は1～5で選択してください',
+            'rating.required' => '評価を選択してください。',
+            'rating.between' => '評価は1～5の範囲で選択してください。',
 
             'comment.required' => 'コメントを入力してください',
         ];
