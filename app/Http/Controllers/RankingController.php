@@ -7,9 +7,7 @@ use App\Models\Book;
 
 class RankingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // ランキング画面
     public function index()
     {
         //
@@ -17,6 +15,8 @@ class RankingController extends Controller
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
             ->orderByDesc('reviews_avg_rating')
+            ->orderByDesc('reviews_count')
+            ->limit(10)
             ->get();
 
         return view('ranking.index', compact('rankedBooks'));

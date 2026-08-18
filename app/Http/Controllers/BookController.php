@@ -66,7 +66,8 @@ class BookController extends Controller
         ]);
         $book->genres()->sync($request->genres);
 
-        return redirect()->route('books.index');
+        return redirect()->route('books.index')
+            ->with('success', '書籍を登録しました');
     }
 
     // 書籍の更新処理
@@ -83,18 +84,18 @@ class BookController extends Controller
         ]);
         $book->genres()->sync($request->genres);
 
-        return redirect()->route('books.index');
+        return redirect()->route('books.show', $book->id)
+            ->with('success', '書籍を更新しました');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // 書籍の削除処理
     public function destroy(Book $book)
     {
         //
         $this->authorize('delete', $book);
 
         $book->delete();
-        return redirect()->route('books.index');
+        return redirect()->route('books.index')
+            ->with('success', '書籍を削除しました');
     }
 }

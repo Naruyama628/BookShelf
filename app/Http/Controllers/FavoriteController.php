@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // いいねした書籍の一覧
     public function index()
     {
         //
@@ -19,9 +17,7 @@ class FavoriteController extends Controller
         return view('favorites.index', compact('books'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    // 書籍のいいね処理
     public function toggle(Book $book)
     {
         //

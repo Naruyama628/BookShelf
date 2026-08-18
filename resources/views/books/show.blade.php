@@ -125,6 +125,10 @@
                                         @error('comment')
                                             <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                         @enderror
+
+                                        @error('user_id')
+                                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
                                     <div class="flex justify-end">
                                         <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">

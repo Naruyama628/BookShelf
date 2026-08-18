@@ -8,9 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ReviewLikeController extends Controller
 {
-    /**
-     * Update the specified resource in storage.
-     */
+    // 書籍お気に入り処理
     public function toggle(Review $review)
     {
         //
