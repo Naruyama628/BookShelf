@@ -18,6 +18,17 @@ use App\Http\Controllers\RankingController;
 |
 */
 
+Route::get('/reports', function () {
+    return 'マイレポート';
+})->name('reports.index');
+
+Route::get('/reading-plans', function () {
+    return '読書計画';
+})->name('reading-plans.index');
+
+Route::get('/notifications', function () {
+    return '通知一覧';
+})->name('notifications.index');
 
 // 書籍一覧（トップ）
 // GET /

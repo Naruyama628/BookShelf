@@ -16,9 +16,31 @@ class BookController extends Controller
     //
 
     // 書籍一覧
-    public function index(): View
+    public function index(Request $request) : View
     {
-        $books = Book::paginate(10);
+        $query = Book::search($request->keyword, $request->genre)
+            ->withAvg('reviews', 'rating');
+
+        switch($request->sort)
+        {
+            case 'newest':
+                $query->orderByDesc('created_at');
+                break;
+
+            case 'oldest':
+                $query->orderBy('created_at');
+                break;
+
+            case 'rating':
+                $query->orderByDesc('reviews_avg_rating');
+                break;
+
+            case 'title':
+                $query->orderBy('title');
+                break;
+        }
+
+        $books = $query->paginate(10);
         $books->load('genres');
 
         return view('books.index', compact('books'));
