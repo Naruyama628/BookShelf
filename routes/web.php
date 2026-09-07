@@ -7,6 +7,10 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReadingPlanController;
+use App\Http\Controllers\NotificationController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -18,17 +22,17 @@ use App\Http\Controllers\RankingController;
 |
 */
 
-Route::get('/reports', function () {
-    return 'マイレポート';
-})->name('reports.index');
+Route::get('/reports', [ReportController::class, 'index'])
+    ->name('reports.index');
 
-Route::get('/reading-plans', function () {
-    return '読書計画';
-})->name('reading-plans.index');
+Route::get('/reading-plans', [ReadingPlanController::class, 'index'])
+    ->name('reading-plans.index');
 
-Route::get('/notifications', function () {
-    return '通知一覧';
-})->name('notifications.index');
+Route::post('/reading-plans', [ReadingPlanController::class, 'create'])
+    ->name('reading-plans.create');
+
+Route::get('/notifications', [NotificationController::class, 'index'])
+    ->name('notifications.index');
 
 // 書籍一覧（トップ）
 // GET /
