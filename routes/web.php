@@ -28,8 +28,23 @@ Route::get('/reports', [ReportController::class, 'index'])
 Route::get('/reading-plans', [ReadingPlanController::class, 'index'])
     ->name('reading-plans.index');
 
-Route::post('/reading-plans', [ReadingPlanController::class, 'create'])
+Route::get('/reading-plans/create', [ReadingPlanController::class, 'create'])
     ->name('reading-plans.create');
+
+Route::post('/reading-plans/store', [ReadingPlanController::class, 'store'])
+    ->name('reading-plans.store');
+
+Route::get('/reading-plans/{readingPlan}/edit', [ReadingPlanController::class, 'edit'])
+    ->name('reading-plans.edit');
+
+Route::put('/reading-plans/{readingPlan}/update', [ReadingPlanController::class, 'update'])
+    ->name('reading-plans.update');
+
+Route::post('/reading-plans/{readingPlan}/complete', [ReadingPlanController::class, 'complete'])
+    ->name('reading-plans.complete');
+
+Route::delete('/reading-plans/{readingPlan}/destroy', [ReadingPlanController::class, 'destroy'])
+    ->name('reading-plans.destroy');
 
 Route::get('/notifications', [NotificationController::class, 'index'])
     ->name('notifications.index');
