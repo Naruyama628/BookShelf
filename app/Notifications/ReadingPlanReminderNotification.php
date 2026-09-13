@@ -3,8 +3,8 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use App\Models\ReadingPlan;
 
 class ReadingPlanReminderNotification extends Notification
 {
@@ -13,9 +13,9 @@ class ReadingPlanReminderNotification extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct()
-    {
-        //
+    public function __construct(
+        private ReadingPlan $readingPlan
+    ) {
     }
 
     /**
@@ -29,18 +29,6 @@ class ReadingPlanReminderNotification extends Notification
     }
 
     /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return [
-            'reading_plan_id' => $this->readingPlan->id,
-            'book_id' => $this->readingPlan->book_id,
-            'message' => '読了予定日が近づいています。',
-        ];
-    }
-
-    /**
      * Get the array representation of the notification.
      *
      * @return array<string, mixed>
@@ -48,7 +36,9 @@ class ReadingPlanReminderNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'reading_plan_id' => $this->readingPlan->id,
+            'book_id' => $this->readingPlan->book_id,
+            'message' => '読了予定日が近づいています。',
         ];
     }
 }

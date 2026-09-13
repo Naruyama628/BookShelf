@@ -49,6 +49,9 @@ Route::delete('/reading-plans/{readingPlan}/destroy', [ReadingPlanController::cl
 Route::get('/notifications', [NotificationController::class, 'index'])
     ->name('notifications.index');
 
+Route::post('/notifications/{notificationId}/read', [NotificationController::class, 'update'])
+    ->name('notifications.read');
+
 // 書籍一覧（トップ）
 // GET /
 Route::get('/', [BookController::class, 'index'])
