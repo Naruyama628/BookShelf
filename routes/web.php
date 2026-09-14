@@ -52,6 +52,9 @@ Route::get('/notifications', [NotificationController::class, 'index'])
 Route::post('/notifications/{notificationId}/read', [NotificationController::class, 'update'])
     ->name('notifications.read');
 
+Route::get('/books/isbn/{isbn}', [BookController::class, 'searchByIsbn'])
+    ->name('books.isbn');
+
 // 書籍一覧（トップ）
 // GET /
 Route::get('/', [BookController::class, 'index'])
