@@ -15,12 +15,27 @@ class SendReadingPlanReminders extends Command
     public function handle(): int
     {
         $readingPlans = ReadingPlan::with('user')
-            ->whereDate('target_date', now()->addDay())
+            ->where('status', ReadingPlanStatus::READING->value)
+            ->where(function ($query) {
+                $query->whereDate('target_date', now()->addDays(3))
+                    ->whereDate('target_date', now())
+                    ->whereDate('target_date', now()->subDays(3));
+            })
             ->get();
 
+            
         foreach ($readingPlans as $readingPlan) {
+
+            if ($readingPlan->target_date->isSameDay(now()->addDays(3))) {
+                $message = '読書期限の3日前です。';
+            } elseif ($readingPlan->target_date->isToday()) {
+                $message = '読書期限は本日です。';
+            } else {
+                $message = '読書期限から3日経過しています。';
+            }
+
             $readingPlan->user->notify(
-                new ReadingPlanReminderNotification($readingPlan)
+                new ReadingPlanReminderNotification($readingPlan, $message)
             );
         }
 
