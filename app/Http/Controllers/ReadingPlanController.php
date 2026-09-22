@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Enums\ReadingPlanStatus;
+use App\Http\Requests\StoreReadingPlanRequest;
 
 class ReadingPlanController extends Controller
 {
@@ -33,7 +34,7 @@ class ReadingPlanController extends Controller
         return view('reading-plans.create', compact('books'));
     }
 
-    public function store(Request $request) : RedirectResponse
+    public function store(StoreReadingPlanRequest $request) : RedirectResponse
     {
         ReadingPlan::create([
             'user_id' => auth()->user()->id,
