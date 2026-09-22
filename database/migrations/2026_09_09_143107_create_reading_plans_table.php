@@ -22,7 +22,8 @@ return new class extends Migration
             // 対象書籍
             $table->foreignId('book_id')
                 ->constrained()
-                ->cascadeOnDelete();
+                ->cascadeOnDelete()
+                ->unique();
 
             // 期日
             $table->date('target_date');

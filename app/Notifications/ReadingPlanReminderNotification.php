@@ -14,7 +14,9 @@ class ReadingPlanReminderNotification extends Notification
      * Create a new notification instance.
      */
     public function __construct(
-        private ReadingPlan $readingPlan
+        private ReadingPlan $readingPlan,
+        private string $message,
+        private string $timing
     ) {
     }
 
@@ -38,7 +40,8 @@ class ReadingPlanReminderNotification extends Notification
         return [
             'reading_plan_id' => $this->readingPlan->id,
             'book_id' => $this->readingPlan->book_id,
-            'message' => '読了予定日が近づいています。',
+            'body' => $this->message,
+            'timing' => $this->timing,
         ];
     }
 }

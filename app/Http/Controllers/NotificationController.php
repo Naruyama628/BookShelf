@@ -11,7 +11,7 @@ class NotificationController extends Controller
 {
     //
 
-    public function index(Request $request) : View
+    public function index() : View
     {
         $notifications = auth()->user()
             ->notifications()
@@ -21,16 +21,16 @@ class NotificationController extends Controller
         return view('notifications.index', compact('notifications'));
     }
 
-public function update(Request $request, string $notificationId): RedirectResponse
-{
-    $notification = $request->user()
-        ->notifications()
-        ->findOrFail($notificationId);
+    public function update(Request $request, string $notificationId): RedirectResponse
+    {
+        $notification = $request->user()
+            ->notifications()
+            ->findOrFail($notificationId);
 
-    $notification->update([
-        'read_at' => now(),
-    ]);
+        $notification->update([
+            'read_at' => now(),
+        ]);
 
-    return redirect()->route('notifications.index');
-}
+        return back()->with('success', '通知を既読にしました。');
+    }
 }
