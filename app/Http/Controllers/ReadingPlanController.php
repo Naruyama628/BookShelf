@@ -44,23 +44,30 @@ class ReadingPlanController extends Controller
         return redirect()->route('reading-plans.index');
     }
 
-    public function edit(ReadingPlan $readingPlan) : View
+    public function edit(ReadingPlan $plan) : View
     {
+        $this->authorize('update', $plan);
+
+        $readingPlan = $plan;
         return view('reading-plans.edit', compact('readingPlan'));
     }
 
-    public function update(ReadingPlan $readingPlan, Request $request) : RedirectResponse
+    public function update(ReadingPlan $plan, Request $request) : RedirectResponse
     {
-        $readingPlan->update([
+        $this->authorize('update', $plan);
+        
+        $plan->update([
             'target_date' => $request->target_date,
         ]);
 
         return redirect()->route('reading-plans.index');
     }
 
-    public function complete(ReadingPlan $readingPlan) : RedirectResponse
+    public function complete(ReadingPlan $plan) : RedirectResponse
     {
-        $readingPlan->update([
+        $this->authorize('update', $plan);
+
+        $plan->update([
             'status' => ReadingPlanStatus::Completed,
             'completed_at' => now(),
         ]);
@@ -68,9 +75,11 @@ class ReadingPlanController extends Controller
         return redirect()->route('reading-plans.index');
     }
 
-    public function destroy(ReadingPlan $readingPlan) : RedirectResponse
+    public function destroy(ReadingPlan $plan) : RedirectResponse
     {
-        $readingPlan->delete();
+        $this->authorize('update', $plan);
+
+        $plan->delete();
 
         return redirect()->route('reading-plans.index');
     }

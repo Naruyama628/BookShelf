@@ -21,11 +21,11 @@ class NotificationController extends Controller
         return view('notifications.index', compact('notifications'));
     }
 
-    public function update(Request $request, string $notificationId): RedirectResponse
+    public function update(Request $request, string $id): RedirectResponse
     {
         $notification = $request->user()
             ->notifications()
-            ->findOrFail($notificationId);
+            ->findOrFail($id);
 
         $notification->update([
             'read_at' => now(),

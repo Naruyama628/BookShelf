@@ -22,43 +22,14 @@ use App\Http\Controllers\NotificationController;
 |
 */
 
-Route::get('/reports', [ReportController::class, 'index'])
-    ->name('reports.index');
-
-Route::get('/reading-plans', [ReadingPlanController::class, 'index'])
-    ->name('reading-plans.index');
-
-Route::get('/reading-plans/create', [ReadingPlanController::class, 'create'])
-    ->name('reading-plans.create');
-
-Route::post('/reading-plans/store', [ReadingPlanController::class, 'store'])
-    ->name('reading-plans.store');
-
-Route::get('/reading-plans/{readingPlan}/edit', [ReadingPlanController::class, 'edit'])
-    ->name('reading-plans.edit');
-
-Route::put('/reading-plans/{readingPlan}/update', [ReadingPlanController::class, 'update'])
-    ->name('reading-plans.update');
-
-Route::post('/reading-plans/{readingPlan}/complete', [ReadingPlanController::class, 'complete'])
-    ->name('reading-plans.complete');
-
-Route::delete('/reading-plans/{readingPlan}/destroy', [ReadingPlanController::class, 'destroy'])
-    ->name('reading-plans.destroy');
-
-Route::get('/notifications', [NotificationController::class, 'index'])
-    ->name('notifications.index');
-
-Route::post('/notifications/{notificationId}/read', [NotificationController::class, 'update'])
-    ->name('notifications.read');
-
-Route::get('/books/isbn/{isbn}', [BookController::class, 'searchByIsbn'])
-    ->name('books.isbn');
-
 // 書籍一覧（トップ）
 // GET /
 Route::get('/', [BookController::class, 'index'])
     ->name('books.index');
+
+// isbnサーチ
+Route::get('/books/isbn/{isbn}', [BookController::class, 'searchByIsbn'])
+    ->name('books.isbn');
 
 // ==================================================
 // 書籍
@@ -205,3 +176,49 @@ Route::prefix('genres')->middleware('auth')->group(function () {
 // ゲストアクセス可能
 Route::get('/ranking', [RankingController::class, 'index'])
     ->name('ranking.index');
+
+
+// ==================================================
+// 読書レポート
+// ==================================================
+Route::middleware('auth')->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index');
+});
+
+// ==================================================
+// 読書計画
+// ==================================================
+Route::prefix('reading-plans')->middleware('auth')->group(function () {
+    Route::get('/', [ReadingPlanController::class, 'index'])
+        ->name('reading-plans.index');
+
+    Route::get('/create', [ReadingPlanController::class, 'create'])
+        ->name('reading-plans.create');
+
+    Route::post('/create', [ReadingPlanController::class, 'store'])
+        ->name('reading-plans.store');
+
+    Route::get('/{plan}/edit', [ReadingPlanController::class, 'edit'])
+        ->name('reading-plans.edit');
+
+    Route::put('/{plan}/update', [ReadingPlanController::class, 'update'])
+        ->name('reading-plans.update');
+
+    Route::post('/{plan}/complete', [ReadingPlanController::class, 'complete'])
+        ->name('reading-plans.complete');
+
+    Route::delete('/{plan}', [ReadingPlanController::class, 'destroy'])
+        ->name('reading-plans.destroy');
+});
+
+// ==================================================
+// 通知
+// ==================================================
+Route::prefix('notifications')->middleware('auth')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('/{id}/read', [NotificationController::class, 'update'])
+        ->name('notifications.read');
+});
