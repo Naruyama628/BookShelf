@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,12 +18,36 @@ class BookController extends Controller
     //
 
     // 書籍一覧
-    public function index(): View
+    public function index(Request $request) : View
     {
-        $books = Book::paginate(10);
+        $query = Book::search($request->keyword, $request->genre)
+            ->withAvg('reviews', 'rating');
+
+        switch($request->sort)
+        {
+            case 'newest':
+                $query->orderByDesc('created_at');
+                break;
+
+            case 'oldest':
+                $query->orderBy('created_at');
+                break;
+
+            case 'rating':
+                $query->orderByDesc('reviews_avg_rating');
+                break;
+
+            case 'title':
+                $query->orderBy('title');
+                break;
+        }
+
+        $books = $query->paginate(10);
         $books->load('genres');
 
-        return view('books.index', compact('books'));
+        $genres = Genre::all();
+
+        return view('books.index', compact('books', 'genres'));
     }
 
     // 書籍詳細
@@ -99,5 +125,49 @@ class BookController extends Controller
         $book->delete();
         return redirect()->route('books.index')
             ->with('success', '書籍を削除しました');
+    }
+
+    //
+    public function searchByIsbn(string $isbn)
+    {
+        if (!preg_match('/^\d{13}$/', $isbn)) {
+            return response()->json([
+                'error' => 'ISBNは13桁の数字で入力してください。',
+            ], 422);
+        }
+
+        $response = Http::get(
+            'https://www.googleapis.com/books/v1/volumes',
+            [
+                'q' => 'isbn:' . $isbn,
+                'key' => config('services.google_books.key'),
+            ]
+        );
+
+        if ($response->failed()) {
+            return response()->json([
+                'error' => 'Google Books APIとの通信に失敗しました。',
+            ], 502);
+        }
+
+        $data = $response->json();
+
+        if (empty($data['items'])) {
+            return response()->json([
+                'error' => '書籍情報が見つかりませんでした。',
+            ], 404);
+        }
+
+        $volumeInfo = $data['items'][0]['volumeInfo'];
+
+        return response()->json([
+            'title' => $volumeInfo['title'] ?? '',
+            'author' => isset($volumeInfo['authors'])
+                ? implode(', ', $volumeInfo['authors'])
+                : '',
+            'published_date' => $volumeInfo['publishedDate'] ?? '',
+            'description' => $volumeInfo['description'] ?? '',
+            'image_url' => $volumeInfo['imageLinks']['thumbnail'] ?? '',
+        ]);
     }
 }

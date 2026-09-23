@@ -23,6 +23,10 @@ class Book extends Model
         'created_by',
      ];
 
+    protected $casts = [
+        'published_date' => 'date',
+    ];
+
     public function genres(): BelongsToMany
     {
         return $this->belongsToMany(Genre::class);
