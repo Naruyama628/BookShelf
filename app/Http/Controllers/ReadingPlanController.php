@@ -77,7 +77,7 @@ class ReadingPlanController extends Controller
 
     public function destroy(ReadingPlan $plan) : RedirectResponse
     {
-        $this->authorize('update', $plan);
+        $this->authorize('delete', $plan);
 
         $plan->delete();
 
