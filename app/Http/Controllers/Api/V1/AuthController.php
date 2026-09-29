@@ -5,10 +5,17 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    /**
+     * sanctumログイン処理
+     *
+     * @param Request $request email password
+     * @return JsonResponse 
+     */
+    public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -32,7 +39,13 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function logout(Request $request)
+    /**
+     * sanctumログアウト処理
+     *
+     * @param Request $request 
+     * @return JsonResponse 
+     */
+    public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
 

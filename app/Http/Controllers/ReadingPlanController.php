@@ -9,11 +9,16 @@ use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Enums\ReadingPlanStatus;
 use App\Http\Requests\StoreReadingPlanRequest;
+use App\Http\Requests\UpdateReadingPlanRequest;
 
 class ReadingPlanController extends Controller
 {
-    //
-
+    /**
+     * 読書計画一覧画面表示
+     *
+     * @param Request $request 絞り込み用のステータス
+     * @return View 読書計画一覧画面
+     */
     public function index(Request $request) : View
     {
         $currentStatus = $request->status;
@@ -28,12 +33,23 @@ class ReadingPlanController extends Controller
         return view('reading-plans.index', compact('currentStatus', 'readingPlans'));
     }
 
+    /**
+     * 読書計画登録画面表示
+     *
+     * @return View 読書計画作成画面
+     */
     public function create() : View
     {
         $books = Book::All();
         return view('reading-plans.create', compact('books'));
     }
 
+    /**
+     * 読書計画登録処理
+     *
+     * @param StoreReadingPlanRequest $request 読書計画登録データ
+     * @return RedirectResponse 読書計画一覧画面
+     */
     public function store(StoreReadingPlanRequest $request) : RedirectResponse
     {
         ReadingPlan::create([
@@ -44,6 +60,12 @@ class ReadingPlanController extends Controller
         return redirect()->route('reading-plans.index');
     }
 
+    /**
+     * 読書計画編集画面表示
+     *
+     * @param ReadingPlan $plan 編集する読書計画
+     * @return RedirectResponse 読書計画編集画面
+     */
     public function edit(ReadingPlan $plan) : View
     {
         $this->authorize('update', $plan);
@@ -52,7 +74,14 @@ class ReadingPlanController extends Controller
         return view('reading-plans.edit', compact('readingPlan'));
     }
 
-    public function update(ReadingPlan $plan, Request $request) : RedirectResponse
+    /**
+     * 読書計画編集処理
+     *
+     * @param ReadingPlan $plan 編集する読書計画
+     * @param UpdateReadingPlanRequest $request 編集後の読書計画のデータ
+     * @return RedirectResponse 読書計画一覧画面
+     */
+    public function update(ReadingPlan $plan, UpdateReadingPlanRequest $request) : RedirectResponse
     {
         $this->authorize('update', $plan);
         
@@ -63,6 +92,12 @@ class ReadingPlanController extends Controller
         return redirect()->route('reading-plans.index');
     }
 
+    /**
+     * 読書計画読了処理
+     *
+     * @param ReadingPlan $plan 読了した読書計画
+     * @return RedirectResponse 読書計画一覧画面
+     */
     public function complete(ReadingPlan $plan) : RedirectResponse
     {
         $this->authorize('update', $plan);
@@ -75,6 +110,12 @@ class ReadingPlanController extends Controller
         return redirect()->route('reading-plans.index');
     }
 
+    /**
+     * 読書計画削除処理
+     *
+     * @param ReadingPlan $plan 削除する読書計画
+     * @return RedirectResponse 読書計画一覧画面
+     */
     public function destroy(ReadingPlan $plan) : RedirectResponse
     {
         $this->authorize('delete', $plan);
