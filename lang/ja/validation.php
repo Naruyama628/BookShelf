@@ -2,6 +2,7 @@
 
 return [
     'required' => ':attributeは必須です。',
+    'confirmed' => ":attributeが一致しません。",
     'email' => ':attributeには有効なメールアドレスを指定してください。',
     'min' => [
         'string' => ':attributeは:min文字以上で入力してください。',
