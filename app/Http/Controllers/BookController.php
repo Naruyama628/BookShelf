@@ -15,9 +15,12 @@ use Illuminate\Support\Facades\Auth;
 
 class BookController extends Controller
 {
-    //
-
-    // 書籍一覧
+    /**
+     * 書籍一覧を表示する
+     *
+     * @param Request $request 書籍検索用のキーワード、ジャンル、ソート条件
+     * @return View 書籍一覧画面
+     */
     public function index(Request $request) : View
     {
         $query = Book::search($request->keyword, $request->genre)
@@ -50,7 +53,12 @@ class BookController extends Controller
         return view('books.index', compact('books', 'genres'));
     }
 
-    // 書籍詳細
+    /**
+     * 書籍詳細を表示する
+     *
+     * @param Book $book 詳細表示する書籍
+     * @return View 書籍詳細画面
+     */
     public function show(Book $book) : View
     {
         $book->load([
@@ -61,14 +69,23 @@ class BookController extends Controller
         return view('books.show', compact('book'));
     }
 
-    // 書籍登録画面
+    /**
+     * 書籍登録画面を表示する
+     *
+     * @return View 書籍登録画面
+     */
     public function create() : View
     {
         $genres = Genre::all();
         return view('books.create', compact('genres'));
     }
 
-    // 書籍編集画面
+    /**
+     * 書籍編集画面を表示する
+     *
+     * @param Book $book 編集する書籍
+     * @return View 書籍編集画面
+     */
     public function edit(Book $book) : View
     {
         $this->authorize('update', $book);
@@ -81,7 +98,12 @@ class BookController extends Controller
         return view('books.edit', compact('book', 'genres'));
     }
 
-    // 書籍の登録処理
+    /**
+     * 書籍を登録する
+     *
+     * @param StoreBookRequest $request 書籍登録の為のデータ タイトル 著者 isbn 出版日 説明 画像URL
+     * @return RedirectResponse 書籍一覧画面
+     */
     public function store(StoreBookRequest $request) : RedirectResponse {
         $book = Book::create([
             'title' => $request->title,
@@ -98,7 +120,13 @@ class BookController extends Controller
             ->with('success', '書籍を登録しました');
     }
 
-    // 書籍の更新処理
+    /**
+     * 書籍を更新する
+     *
+     * @param Book $book 更新する書籍
+     * @param UpdateBookRequest $request 更新する為のデータ タイトル 著者 isbn 出版日 説明 画像URL
+     * @return RedirectResponse 書籍詳細画面
+     */
     public function update(Book $book, UpdateBookRequest $request) : RedirectResponse {
         $this->authorize('update', $book);
 
@@ -116,8 +144,14 @@ class BookController extends Controller
             ->with('success', '書籍を更新しました');
     }
 
-    // 書籍の削除処理
-    public function destroy(Book $book)
+
+    /**
+     * 書籍を削除する
+     *
+     * @param Book $book 削除する書籍
+     * @return RedirectResponse 書籍一覧画面
+     */
+    public function destroy(Book $book): RedirectResponse
     {
         //
         $this->authorize('delete', $book);
@@ -127,8 +161,13 @@ class BookController extends Controller
             ->with('success', '書籍を削除しました');
     }
 
-    //
-    public function searchByIsbn(string $isbn)
+    /**
+     * isbn検索
+     *
+     * @param string $isbn 13桁のisbn
+     * @return JsonResponse isbn検索によって取得したデータ
+     */
+    public function searchByIsbn(string $isbn): JsonResponse
     {
         if (!preg_match('/^\d{13}$/', $isbn)) {
             return response()->json([

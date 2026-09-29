@@ -24,13 +24,6 @@ use App\Http\Controllers\Api\V1\AuthController;
 
 Route::post('/v1/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
-
-    Route::post('/logout', [AuthController::class, 'logout']);
-
-    // ...
-});
-
 Route::prefix('v1')->group(function () {
     // 認証不要
     Route::post('/login', [AuthController::class, 'login']);
@@ -41,7 +34,11 @@ Route::prefix('v1')->group(function () {
     // Sanctum認証必須
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/books', [BookController::class, 'store']);
+
         Route::put('/books/{book}', [BookController::class, 'update']);
+
+        Route::post('/logout', [AuthController::class, 'logout']);
+        
         Route::delete('/books/{book}', [BookController::class, 'destroy']);
     });
 });

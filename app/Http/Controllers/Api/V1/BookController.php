@@ -9,13 +9,19 @@ use App\Http\Resources\Api\V1\BookResource;
 use App\Http\Resources\Api\V1\BookDetailResource;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class BookController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * 書籍一覧を取得
+     *
+     * @param Request $request 書籍検索用のキーワード、ジャンル
+     * @return AnonymousResourceCollection 書籍一覧
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
         //
         $books = Book::with('genres')
@@ -28,9 +34,12 @@ class BookController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * 書籍を登録
+     *
+     * @param Request $request 書籍登録情報
+     * @return JsonResponse
      */
-    public function store(StoreBookRequest $request)
+    public function store(StoreBookRequest $request): JsonResponse
     {
         //
         $book = Book::create([
@@ -40,7 +49,7 @@ class BookController extends Controller
             'published_date' => $request->published_date,
             'description' => $request->description,
             'image_url' => $request->image_url,
-            'created_by' => $request->id,
+            'created_by' => $request->user()->id,
         ]);
 
         $book->genres()->sync($request->genres);
@@ -53,9 +62,12 @@ class BookController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 書籍詳細を取得
+     *
+     * @param Book $book 詳細を取得する書籍
+     * @return BookDetailResource 書籍の詳細
      */
-    public function show(Book $book)
+    public function show(Book $book): BookDetailResource
     {
         //
         $book->load([
@@ -67,11 +79,16 @@ class BookController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * 書籍を更新
+     *
+     * @param UpdateBookRequest $request 更新後の情報
+     * @param Book $book 更新する書籍
+     * @return JsonResponse 
      */
-    public function update(UpdateBookRequest $request, Book $book)
+    public function update(UpdateBookRequest $request, Book $book): JsonResponse
     {
         //
+        $this->authorize('update', $book);
         $book->update([
             'title' => $request->title,
             'author' => $request->author,
@@ -91,11 +108,15 @@ class BookController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * 書籍を削除
+     *
+     * @param Book $book 削除する書籍
+     * @return JsonResponse 
      */
-    public function destroy(Book $book)
+    public function destroy(Book $book): Response
     {
         //
+        $this->authorize('update', $book);
         $book->delete();
 
         return response()->noContent();

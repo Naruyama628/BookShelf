@@ -7,6 +7,8 @@ use Tests\TestCase;
 use App\Models\Book;
 use App\Models\User;
 use App\Models\Genre;
+use App\Models\Review;
+use Illuminate\Support\Facades\Http;
 
 class BookTest extends TestCase
 {
@@ -181,8 +183,6 @@ class BookTest extends TestCase
         $response->assertSessionHasErrors([
             'title',
             'author',
-            'isbn',
-            'published_date',
             'genres',
         ]);
     }
@@ -192,5 +192,234 @@ class BookTest extends TestCase
         $response = $this->get(route('books.show', 999999));
 
         $response->assertStatus(404);
+    }
+
+    public function test_書籍一覧でタイトル検索できる(): void
+    {
+        Book::factory()->create([
+            'title' => 'Laravel入門',
+            'author' => '山田太郎',
+        ]);
+
+        Book::factory()->create([
+            'title' => 'PHP実践',
+            'author' => '鈴木花子',
+        ]);
+
+        $response = $this->get('/?keyword=Laravel');
+
+        $response->assertStatus(200);
+        $response->assertSee('Laravel入門');
+        $response->assertDontSee('PHP実践');
+    }
+
+    public function test_書籍一覧で著者検索できる(): void
+    {
+        Book::factory()->create([
+            'title' => 'Laravel入門',
+            'author' => '山田太郎',
+        ]);
+
+        Book::factory()->create([
+            'title' => 'PHP実践',
+            'author' => '鈴木花子',
+        ]);
+
+        $response = $this->get('/?keyword=山田');
+
+        $response->assertStatus(200);
+        $response->assertSee('Laravel入門');
+        $response->assertDontSee('PHP実践');
+    }
+
+    public function test_ISBN検索で書籍情報を取得できる(): void
+    {
+        Http::fake([
+            'www.googleapis.com/*' => Http::response([
+                'totalItems' => 1,
+                'items' => [
+                    [
+                        'volumeInfo' => [
+                            'title' => 'Laravel入門',
+                            'authors' => ['山田太郎'],
+                            'publishedDate' => '2026-08-24',
+                            'description' => 'Laravelの入門書です。',
+                            'imageLinks' => [
+                                'thumbnail' => 'https://example.com/book.jpg',
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->getJson(
+            route('books.isbn', [
+                'isbn' => '9781234567890',
+            ])
+        );
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'title' => 'Laravel入門',
+                'author' => '山田太郎',
+            ]);
+    }
+
+    public function test_ISBNが13桁でない場合検索できない(): void
+    {
+        $response = $this->getJson(
+            route('books.isbn', [
+                'isbn' => '123456',
+            ])
+        );
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'error' => 'ISBNは13桁の数字で入力してください。',
+            ]);
+    }
+
+    public function test_ISBNに数字以外が含まれる場合検索できない(): void
+    {
+        $response = $this->getJson(
+            route('books.isbn', [
+                'isbn' => '978123456789A',
+            ])
+        );
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'error' => 'ISBNは13桁の数字で入力してください。',
+            ]);
+    }
+
+    public function test_GoogleBooksAPIとの通信に失敗した場合エラーになる(): void
+    {
+        Http::fake([
+            'www.googleapis.com/*' => Http::response([], 500),
+        ]);
+
+        $response = $this->getJson(
+            route('books.isbn', [
+                'isbn' => '9781234567890',
+            ])
+        );
+
+        $response->assertStatus(502)
+            ->assertJson([
+                'error' => 'Google Books APIとの通信に失敗しました。',
+            ]);
+    }
+
+    public function test_ISBNに対応する書籍が存在しない場合404になる(): void
+    {
+        Http::fake([
+            'www.googleapis.com/*' => Http::response([
+                'totalItems' => 0,
+                'items' => [],
+            ], 200),
+        ]);
+
+        $response = $this->getJson(
+            route('books.isbn', [
+                'isbn' => '9781234567890',
+            ])
+        );
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'error' => '書籍情報が見つかりませんでした。',
+            ]);
+    }
+
+    public function test_書籍を新しい順に並び替えできる(): void
+    {
+        Book::factory()->create([
+            'title' => '古い本',
+            'created_at' => now()->subDays(2),
+        ]);
+
+        Book::factory()->create([
+            'title' => '新しい本',
+            'created_at' => now(),
+        ]);
+
+        $response = $this->get('/?sort=newest');
+
+        $response->assertStatus(200);
+        $response->assertSeeInOrder([
+            '新しい本',
+            '古い本',
+        ]);
+    }
+
+    public function test_書籍を古い順に並び替えできる(): void
+    {
+        Book::factory()->create([
+            'title' => '古い本',
+            'created_at' => now()->subDays(2),
+        ]);
+
+        Book::factory()->create([
+            'title' => '新しい本',
+            'created_at' => now(),
+        ]);
+
+        $response = $this->get('/?sort=oldest');
+
+        $response->assertStatus(200);
+        $response->assertSeeInOrder([
+            '古い本',
+            '新しい本',
+        ]);
+    }
+
+    public function test_書籍をタイトル順に並び替えできる(): void
+    {
+        Book::factory()->create([
+            'title' => 'PHP入門',
+        ]);
+
+        Book::factory()->create([
+            'title' => 'Laravel入門',
+        ]);
+
+        $response = $this->get('/?sort=title');
+
+        $response->assertStatus(200);
+        $response->assertSeeInOrder([
+            'Laravel入門',
+            'PHP入門',
+        ]);
+    }
+
+    public function test_書籍を評価が高い順に並び替えできる(): void
+    {
+        $highBook = Book::factory()->create([
+            'title' => '高評価の本',
+        ]);
+
+        $lowBook = Book::factory()->create([
+            'title' => '低評価の本',
+        ]);
+
+        Review::factory()->create([
+            'book_id' => $highBook->id,
+            'rating' => 5,
+        ]);
+
+        Review::factory()->create([
+            'book_id' => $lowBook->id,
+            'rating' => 2,
+        ]);
+
+        $response = $this->get('/?sort=rating');
+
+        $response->assertStatus(200);
+        $response->assertSeeInOrder([
+            '高評価の本',
+            '低評価の本',
+        ]);
     }
 }

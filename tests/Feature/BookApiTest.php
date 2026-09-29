@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Book;
 use App\Models\Genre;
 use App\Models\Review;
+use App\Models\User;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -105,6 +107,12 @@ class BookApiTest extends TestCase
 
     public function test_APIで書籍を登録できる(): void
     {
+        // ユーザー作成
+        $user = User::factory()->create();
+
+        // Sanctumで認証済み状態にする
+        Sanctum::actingAs($user);
+
         $genre = Genre::factory()->create();
 
         $response = $this->postJson('/api/v1/books', [
@@ -134,6 +142,12 @@ class BookApiTest extends TestCase
 
     public function test_APIで書籍を更新できる(): void
     {
+        // ユーザー作成
+        $user = User::factory()->create();
+
+        // Sanctumで認証済み状態にする
+        Sanctum::actingAs($user);
+
         $book = Book::factory()->create();
         $genre = Genre::factory()->create();
 
@@ -163,8 +177,36 @@ class BookApiTest extends TestCase
         ]);
     }
 
+    public function test_API書籍詳細でレビュー情報を取得できる(): void
+    {
+        $book = Book::factory()->create();
+        $user = User::factory()->create();
+
+        Review::factory()->create([
+            'book_id' => $book->id,
+            'user_id' => $user->id,
+            'rating' => 5,
+            'comment' => 'とても良い本でした。',
+        ]);
+
+        $response = $this->getJson(
+            "/api/v1/books/{$book->id}"
+        );
+
+        $response->assertStatus(200)
+            ->assertJsonFragment([
+                'rating' => 5,
+                'comment' => 'とても良い本でした。',
+            ]);
+    }
+
     public function test_APIで書籍を削除できる(): void
     {
+        // ユーザー作成
+        $user = User::factory()->create();
+
+        // Sanctumで認証済み状態にする
+        Sanctum::actingAs($user);
         $book = Book::factory()->create();
 
         $response = $this->deleteJson(
@@ -174,6 +216,72 @@ class BookApiTest extends TestCase
         $response->assertStatus(204);
 
         $this->assertDatabaseMissing('books', [
+            'id' => $book->id,
+        ]);
+    }
+
+    public function test_未認証ユーザーはAPIで書籍を登録できない(): void
+    {
+        $genre = Genre::factory()->create();
+
+        $response = $this->postJson('/api/v1/books', [
+            'title' => 'API Laravel入門',
+            'author' => '山田太郎',
+            'isbn' => '9781234567890',
+            'published_date' => '2026-08-24',
+            'description' => 'API登録テストです。',
+            'image_url' => 'https://example.com/book.jpg',
+            'genres' => [$genre->id],
+        ]);
+
+        $response->assertStatus(401);
+
+        $this->assertDatabaseMissing('books', [
+            'isbn' => '9781234567890',
+        ]);
+    }
+
+    public function test_未認証ユーザーはAPIで書籍を更新できない(): void
+    {
+        $book = Book::factory()->create();
+        $genre = Genre::factory()->create();
+
+        $originalTitle = $book->title;
+
+        $response = $this->putJson(
+            "/api/v1/books/{$book->id}",
+            [
+                'title' => '不正な更新タイトル',
+                'author' => $book->author,
+                'isbn' => $book->isbn,
+                'published_date' => $book->published_date,
+                'description' => $book->description,
+                'image_url' => $book->image_url,
+                'genres' => [$genre->id],
+            ]
+        );
+
+        $response->assertStatus(401);
+
+        // 更新されていないことも確認
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'title' => $originalTitle,
+        ]);
+    }
+
+    public function test_未認証ユーザーはAPIで書籍を削除できない(): void
+    {
+        $book = Book::factory()->create();
+
+        $response = $this->deleteJson(
+            "/api/v1/books/{$book->id}"
+        );
+
+        $response->assertStatus(401);
+
+        // 削除されていないことも確認
+        $this->assertDatabaseHas('books', [
             'id' => $book->id,
         ]);
     }

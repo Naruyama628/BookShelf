@@ -11,9 +11,12 @@ use App\Enums\ReadingPlanStatus;
 
 class ReportController extends Controller
 {
-    //
-
-    public function index(Request $request) : View
+    /**
+     * マイ読書レポート画面表示
+     *
+     * @return RedirectResponse マイ読書レポート画面
+     */
+    public function index() : View
     {
         $stats = [
             'summary' => [
