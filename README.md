@@ -433,19 +433,141 @@ sail down
 
 ## テスト手順
 
-### 1. Sailを起動
+### 1. Laravel Sailを起動
+
+テストを実行する前にDockerコンテナを起動します。
 
 ```bash
-sail up -d
+./vendor/bin/sail up -d
 ```
 
-### 2. テスト用データベースの準備
+起動状態を確認します。
 
-`.env.testing` のデータベース設定を確認します。
+```bash
+./vendor/bin/sail ps
+```
+
+`laravel.test` と `mysql` が起動していることを確認してください。
+
+---
+
+### 2. `.env.testing` を作成
+
+プロジェクトルートにテスト環境用の `.env.testing` を作成します。
+
+```bash
+cp .env .env.testing
+```
+
+`.env.testing` を開き、テスト用の設定に変更します。
 
 ```env
+APP_NAME=BookShelf
 APP_ENV=testing
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
 
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=testing
+DB_USERNAME=sail
+DB_PASSWORD=password
+
+CACHE_DRIVER=array
+SESSION_DRIVER=array
+QUEUE_CONNECTION=sync
+
+MAIL_MAILER=array
+
+GOOGLE_BOOKS_API_KEY=
+```
+
+> テストでは通常、実際のGoogle Books APIを呼び出さないため、
+> `GOOGLE_BOOKS_API_KEY` は空欄にします。
+
+---
+
+### 3. テスト環境用のAPP_KEYを生成
+
+```bash
+sail artisan key:generate --env=testing
+```
+
+`.env.testing` の `APP_KEY` にキーが設定されていることを確認します。
+
+---
+
+### 4. テスト用データベースを作成
+
+MySQLコンテナへ接続します。
+
+```bash
+sail mysql
+```
+
+MySQL上でテスト用データベースを作成します。
+
+```sql
+CREATE DATABASE IF NOT EXISTS testing;
+```
+
+確認します。
+
+```sql
+SHOW DATABASES;
+```
+
+以下のように `testing` が表示されれば作成完了です。
+
+```text
+information_schema
+laravel
+mysql
+performance_schema
+testing
+```
+
+MySQLから抜けます。
+
+```sql
+exit;
+```
+
+---
+
+### 5. `phpunit.xml` の設定を確認
+
+`phpunit.xml` を開き、テスト環境の設定を確認します。
+
+MySQLを使用する場合は、SQLite用の設定などが有効になっていないことを確認してください。
+
+例：
+
+```xml
+<php>
+    <env name="APP_ENV" value="testing"/>
+    <env name="BCRYPT_ROUNDS" value="4"/>
+    <env name="CACHE_DRIVER" value="array"/>
+    <env name="MAIL_MAILER" value="array"/>
+    <env name="QUEUE_CONNECTION" value="sync"/>
+    <env name="SESSION_DRIVER" value="array"/>
+</php>
+```
+
+以下のような設定がある場合、
+
+```xml
+<env name="DB_CONNECTION" value="sqlite"/>
+<env name="DB_DATABASE" value=":memory:"/>
+```
+
+MySQLの `testing` データベースを使用する構成では削除またはコメントアウトします。
+
+`.env.testing` の以下の設定が使用される状態にします。
+
+```env
 DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
@@ -454,35 +576,88 @@ DB_USERNAME=sail
 DB_PASSWORD=password
 ```
 
-テスト用データベースが必要な構成の場合は、事前に作成してください。
+---
 
-### 3. 全テストを実行
+### 6. テスト用データベースの接続確認
+
+テスト環境を指定してMigrationを実行します。
+
+```bash
+sail artisan migrate --env=testing
+```
+
+正常にMigrationが完了すれば、テスト用データベースへの接続は成功しています。
+
+データベースを最初から作り直す場合は以下を実行します。
+
+```bash
+sail artisan migrate:fresh --env=testing
+```
+
+---
+
+### 7. 全テストを実行
 
 ```bash
 sail artisan test
 ```
 
-### 4. 特定のテストのみ実行
+正常に完了すると、以下のようにテスト結果が表示されます。
 
-例：書籍APIのテスト
+```text
+PASS  Tests\Feature\BookTest
+PASS  Tests\Feature\ReviewTest
+PASS  Tests\Feature\FavoriteTest
+
+Tests:    XX passed
+Duration: X.XXs
+```
+
+---
+
+### 8. 特定のテストファイルを実行
+
+書籍機能：
+
+```bash
+sail artisan test tests/Feature/BookTest.php
+```
+
+書籍API：
 
 ```bash
 sail artisan test tests/Feature/BookApiTest.php
 ```
 
-例：読書計画のテスト
+レビュー：
+
+```bash
+sail artisan test tests/Feature/ReviewTest.php
+```
+
+お気に入り：
+
+```bash
+sail artisan test tests/Feature/FavoriteTest.php
+```
+
+読書計画：
 
 ```bash
 sail artisan test tests/Feature/ReadingPlanTest.php
 ```
 
-例：リマインダー通知のテスト
+リマインダー通知：
 
 ```bash
 sail artisan test tests/Feature/ReadingPlanReminderTest.php
 ```
 
-### 5. テスト名を指定して実行
+---
+
+### 9. 特定のテストのみ実行
+
+テストメソッド名を指定する場合：
 
 ```bash
 sail artisan test --filter=テストメソッド名
@@ -494,38 +669,61 @@ sail artisan test --filter=テストメソッド名
 sail artisan test --filter=test_book_can_be_created
 ```
 
-### 6. コードカバレッジを確認
+---
+
+### 10. コードカバレッジを確認
+
+コードカバレッジを表示する場合：
 
 ```bash
 sail artisan test --coverage
 ```
 
-HTML形式のカバレッジレポートを出力する場合：
+PHPUnitを直接使用する場合：
+
+```bash
+sail php vendor/bin/phpunit --coverage-text
+```
+
+HTML形式のカバレッジレポートを作成する場合：
 
 ```bash
 sail php vendor/bin/phpunit --coverage-html coverage
 ```
 
-実行後、`coverage/` ディレクトリにレポートが生成されます。
+実行後、プロジェクトルートの `coverage/` にレポートが生成されます。
 
-### テストファイル
+---
 
-主なFeature Testは `tests/Feature/` に配置しています。
+### テスト実行の流れ
 
 ```text
-tests/Feature/
-├── AuthApiTest.php
-├── BookApiTest.php
-├── BookTest.php
-├── FavoriteTest.php
-├── GenreTest.php
-├── RankingTest.php
-├── ReadingPlanReminderTest.php
-├── ReadingPlanTest.php
-├── ReportTest.php
-├── ReviewLikeTest.php
-└── ReviewTest.php
+Sail起動
+    ↓
+.env.testing 作成
+    ↓
+テスト用APP_KEY生成
+    ↓
+testing データベース作成
+    ↓
+phpunit.xml 確認
+    ↓
+テストDBへMigration
+    ↓
+sail artisan test
+    ↓
+必要に応じてコードカバレッジ確認
 ```
+
+### 注意
+
+テストでは必ずテスト用のデータベースを使用してください。
+
+```env
+DB_DATABASE=testing
+```
+
+開発用データベースを指定した状態でテストを実行すると、`RefreshDatabase` などによって開発中のデータが削除される可能性があります。
 
 # ER図
 
