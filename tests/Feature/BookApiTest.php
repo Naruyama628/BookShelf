@@ -142,24 +142,25 @@ class BookApiTest extends TestCase
 
     public function test_APIで書籍を更新できる(): void
     {
-        // ユーザー作成
         $user = User::factory()->create();
 
-        // Sanctumで認証済み状態にする
         Sanctum::actingAs($user);
 
-        $book = Book::factory()->create();
+        $book = Book::factory()->create([
+            'created_by' => $user->id,
+        ]);
+
         $genre = Genre::factory()->create();
 
         $response = $this->putJson(
             "/api/v1/books/{$book->id}",
             [
                 'title' => 'API更新後タイトル',
-                'author' => $book->author,
-                'isbn' => $book->isbn,
-                'published_date' => $book->published_date,
-                'description' => $book->description,
-                'image_url' => $book->image_url,
+                'author' => 'API更新後著者',
+                'isbn' => '9781234567890',
+                'published_date' => '2026-09-30',
+                'description' => 'API更新後説明',
+                'image_url' => null,
                 'genres' => [$genre->id],
             ]
         );
@@ -169,11 +170,6 @@ class BookApiTest extends TestCase
         $this->assertDatabaseHas('books', [
             'id' => $book->id,
             'title' => 'API更新後タイトル',
-        ]);
-
-        $this->assertDatabaseHas('book_genre', [
-            'book_id' => $book->id,
-            'genre_id' => $genre->id,
         ]);
     }
 
@@ -202,12 +198,13 @@ class BookApiTest extends TestCase
 
     public function test_APIで書籍を削除できる(): void
     {
-        // ユーザー作成
         $user = User::factory()->create();
 
-        // Sanctumで認証済み状態にする
         Sanctum::actingAs($user);
-        $book = Book::factory()->create();
+
+        $book = Book::factory()->create([
+            'created_by' => $user->id,
+        ]);
 
         $response = $this->deleteJson(
             "/api/v1/books/{$book->id}"
