@@ -310,311 +310,222 @@ http://localhost:5173
 
 ---
 
-# 環境構築
+## 環境構築
 
-本プロジェクトは **Laravel Sail（Docker）** を使用して開発環境を構築します。
+### 1. リポジトリをクローン
 
-## 前提環境
-
-以下がインストールされていることを確認してください。
-
-- Git
-- Docker / Docker Desktop
-- WSL2（Windows環境の場合）
-- PHP 8.1以上
-- Composer
-- Node.js
-- npm
-
-バージョンは以下のコマンドで確認できます。
-
-```bash id="e1vb93"
-git --version
-docker --version
-php -v
-composer --version
-node -v
-npm -v
-```
-
-Composerがインストールされていない場合、Ubuntu / WSLでは以下でインストールできます。
-
-```bash id="r7z5n1"
-sudo apt update
-sudo apt install composer
-```
-
----
-
-## 1. リポジトリをクローン
-
-```bash id="p0m2f8"
+```bash
 git clone https://github.com/Naruyama628/BookShelf.git
 ```
 
 プロジェクトディレクトリへ移動します。
 
-```bash id="r6v8q4"
+```bash
 cd BookShelf
 ```
 
----
+### 2. Laravel Sailのインストール
 
-## 2. PHPパッケージをインストール
+Composerの依存パッケージをDocker経由でインストールします。
 
-Composerを使用してLaravelに必要なパッケージをインストールします。
-
-```bash id="g9c4t2"
+```bash
+docker run --rm \
+-u "$(id -u):$(id -g)" \
+-v "$(pwd):/var/www/html" \
+-w /var/www/html \
+-e COMPOSER_CACHE_DIR=/tmp/composer_cache \
+laravelsail/php82-composer:latest \
 composer install
 ```
 
-正常に完了すると、プロジェクト内に `vendor` ディレクトリが作成されます。
+### 3. `.env` ファイルの作成
 
-```text id="mzq1b8"
-BookShelf/
-├── app/
-├── vendor/
-├── artisan
-├── composer.json
-├── compose.yaml
-└── ...
-```
-
----
-
-## 3. `.env` を作成
-
-`.env.example` をコピーします。
-
-```bash id="k3x7s5"
+```bash
 cp .env.example .env
 ```
 
----
+`.env` のデータベース設定を確認します。
 
-## 4. Laravel Sailを起動
+```env
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=sail
+DB_PASSWORD=password
 
-Dockerコンテナをバックグラウンドで起動します。
+GOOGLE_BOOKS_API_KEY=your_google_books_api_key
+```
 
-```bash id="d8h2n6"
+### 4. Laravel Sailの起動
+
+```bash
 ./vendor/bin/sail up -d
 ```
 
-起動状態を確認します。
+### 5. Sailエイリアスの設定
 
-```bash id="w5f9j3"
-./vendor/bin/sail ps
+WSL / Bashの場合：
+
+```bash
+echo "alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'" >> ~/.bashrc
+source ~/.bashrc
 ```
 
-本プロジェクトでは主に以下のコンテナを使用します。
+以降は `sail` でコマンドを実行できます。
 
-```text id="b4y7c1"
-laravel.test    Laravel / PHP
-mysql           MySQL
-phpmyadmin      phpMyAdmin
+### 6. アプリケーションキーの生成
+
+```bash
+sail artisan key:generate
 ```
 
----
+### 7. フロントエンドパッケージのインストール
 
-## 5. APP_KEYを生成
-
-Laravelの暗号化などで使用するApplication Keyを生成します。
-
-```bash id="u2k8p4"
-./vendor/bin/sail artisan key:generate
+```bash
+sail npm install
 ```
 
----
+### 8. データベースの構築
 
-## 6. データベースを構築
-
-Migrationを実行します。
-
-```bash id="a6e3r9"
-./vendor/bin/sail artisan migrate
+```bash
+sail artisan migrate --seed
 ```
 
-初期データも登録する場合は、
+データベースを完全に作り直す場合：
 
-```bash id="f1t5v7"
-./vendor/bin/sail artisan db:seed
+```bash
+sail artisan migrate:fresh --seed
 ```
 
-データベースを一度初期化して、MigrationとSeederをまとめて実行する場合は、
+### 9. Viteの起動
 
-```bash id="q9n4l2"
-./vendor/bin/sail artisan migrate:fresh --seed
+```bash
+sail npm run dev
 ```
 
-> `migrate:fresh` は既存テーブルをすべて削除してから再作成します。既存データも削除されるため注意してください。
+### 10. アプリケーションへアクセス
 
----
+BookShelf：
 
-## 7. フロントエンドパッケージをインストール
-
-Node.jsの依存パッケージをインストールします。
-
-```bash id="c7m2z8"
-npm install
-```
-
----
-
-## 8. Viteを起動
-
-開発用のViteサーバーを起動します。
-
-```bash id="h4s9x1"
-npm run dev
-```
-
-開発中は、このターミナルを起動したままにします。
-
----
-
-## 9. アプリケーションへアクセス
-
-ブラウザから以下へアクセスします。
-
-```text id="y8d3k6"
+```text
 http://localhost
 ```
 
 phpMyAdmin：
 
-```text id="j2f7r4"
+```text
 http://localhost:8080
 ```
 
----
+## 2回目以降の起動
 
-# 2回目以降の起動
-
-初回の環境構築が完了している場合、毎回 `composer install` や `migrate` を実行する必要はありません。
-
-Dockerを起動します。
-
-```bash id="l5p1v9"
-./vendor/bin/sail up -d
+```bash
+sail up -d
+sail npm run dev
 ```
 
-Viteを起動します。
+終了：
 
-```bash id="n3c8w2"
-npm run dev
+```bash
+sail down
 ```
 
-終了する場合：
+## テスト手順
 
-```bash id="t7q4m6"
-./vendor/bin/sail down
+### 1. Sailを起動
+
+```bash
+sail up -d
 ```
 
----
+### 2. テスト用データベースの準備
 
-# テスト実行
+`.env.testing` のデータベース設定を確認します。
 
-Feature Test / Unit Testは以下で実行できます。
+```env
+APP_ENV=testing
 
-```bash id="v9e2s5"
-./vendor/bin/sail artisan test
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=testing
+DB_USERNAME=sail
+DB_PASSWORD=password
 ```
 
-PHPUnitを直接実行する場合：
+テスト用データベースが必要な構成の場合は、事前に作成してください。
 
-```bash id="x1k6d8"
-./vendor/bin/sail php vendor/bin/phpunit
+### 3. 全テストを実行
+
+```bash
+sail artisan test
 ```
 
----
+### 4. 特定のテストのみ実行
 
-# 環境構築の流れ
+例：書籍APIのテスト
 
-```text id="f4r8n3"
-git clone
-    ↓
-cd BookShelf
-    ↓
-composer install
-    ↓
-cp .env.example .env
-    ↓
-./vendor/bin/sail up -d
-    ↓
-./vendor/bin/sail artisan key:generate
-    ↓
-./vendor/bin/sail artisan migrate:fresh --seed
-    ↓
-npm install
-    ↓
-npm run dev
-    ↓
-http://localhost
+```bash
+sail artisan test tests/Feature/BookApiTest.php
 ```
 
-## トラブルシューティング
+例：読書計画のテスト
 
-### `composer: command not found`
-
-```text id="k6z2p7"
-Command 'composer' not found
+```bash
+sail artisan test tests/Feature/ReadingPlanTest.php
 ```
 
-Composerがインストールされていません。
+例：リマインダー通知のテスト
 
-Ubuntu / WSLの場合：
-
-```bash id="b8m5q1"
-sudo apt update
-sudo apt install composer
+```bash
+sail artisan test tests/Feature/ReadingPlanReminderTest.php
 ```
 
-インストール後に確認します。
+### 5. テスト名を指定して実行
 
-```bash id="r3h7v9"
-composer --version
+```bash
+sail artisan test --filter=テストメソッド名
 ```
 
-その後、再度実行します。
+例：
 
-```bash id="s1n4c8"
-composer install
+```bash
+sail artisan test --filter=test_book_can_be_created
 ```
 
----
+### 6. コードカバレッジを確認
 
-### `./vendor/bin/sail: No such file or directory`
-
-`vendor` がまだ作成されていない可能性があります。
-
-```bash id="p9d2f5"
-composer install
+```bash
+sail artisan test --coverage
 ```
 
-を先に実行してください。
+HTML形式のカバレッジレポートを出力する場合：
 
----
-
-### Dockerが起動しない
-
-Docker Desktopが起動していることを確認した上で、
-
-```bash id="w7k3m1"
-docker --version
-docker ps
+```bash
+sail php vendor/bin/phpunit --coverage-html coverage
 ```
 
-を確認してください。
+実行後、`coverage/` ディレクトリにレポートが生成されます。
 
----
+### テストファイル
 
-### データベースを最初から作り直したい
+主なFeature Testは `tests/Feature/` に配置しています。
 
-```bash id="e5v8q2"
-./vendor/bin/sail artisan migrate:fresh --seed
+```text
+tests/Feature/
+├── AuthApiTest.php
+├── BookApiTest.php
+├── BookTest.php
+├── FavoriteTest.php
+├── GenreTest.php
+├── RankingTest.php
+├── ReadingPlanReminderTest.php
+├── ReadingPlanTest.php
+├── ReportTest.php
+├── ReviewLikeTest.php
+└── ReviewTest.php
 ```
-
-を実行します
 
 # ER図
 
