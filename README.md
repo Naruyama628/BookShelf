@@ -614,7 +614,7 @@ docker ps
 ./vendor/bin/sail artisan migrate:fresh --seed
 ```
 
-を実行します。
+を実行します
 
 # ER図
 
