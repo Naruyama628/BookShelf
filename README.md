@@ -232,13 +232,13 @@ POST /api/v1/logout
 
 ## 書籍API
 
-| Method | Endpoint | 内容 | 認証 |
-|---|---|---|---|
-| GET | `/api/v1/books` | 書籍一覧取得 | 不要 |
-| GET | `/api/v1/books/{book}` | 書籍詳細取得 | 不要 |
-| POST | `/api/v1/books` | 書籍登録 | 必要 |
-| PUT | `/api/v1/books/{book}` | 書籍更新 | 必要 |
-| DELETE | `/api/v1/books/{book}` | 書籍削除 | 必要 |
+| Method | Endpoint               | 内容         | 認証 |
+| ------ | ---------------------- | ------------ | ---- |
+| GET    | `/api/v1/books`        | 書籍一覧取得 | 不要 |
+| GET    | `/api/v1/books/{book}` | 書籍詳細取得 | 不要 |
+| POST   | `/api/v1/books`        | 書籍登録     | 必要 |
+| PUT    | `/api/v1/books/{book}` | 書籍更新     | 必要 |
+| DELETE | `/api/v1/books/{book}` | 書籍削除     | 必要 |
 
 書籍更新・削除ではPolicyを利用し、対象書籍の作成者かどうかを確認します。
 
@@ -284,11 +284,11 @@ Laravel Sailを利用しています。
 
 `compose.yaml`では以下のコンテナを使用しています。
 
-| Service | 内容 |
-|---|---|
+| Service        | 内容          |
+| -------------- | ------------- |
 | `laravel.test` | Laravel / PHP |
-| `mysql` | MySQL 8.4 |
-| `phpmyadmin` | DB管理画面 |
+| `mysql`        | MySQL 8.4     |
+| `phpmyadmin`   | DB管理画面    |
 
 Laravel：
 
@@ -312,75 +312,149 @@ http://localhost:5173
 
 # 環境構築
 
+本プロジェクトは **Laravel Sail（Docker）** を使用して開発環境を構築します。
+
+## 前提環境
+
+以下がインストールされていることを確認してください。
+
+- Git
+- Docker / Docker Desktop
+- WSL2（Windows環境の場合）
+- PHP 8.1以上
+- Composer
+- Node.js
+- npm
+
+バージョンは以下のコマンドで確認できます。
+
+```bash id="e1vb93"
+git --version
+docker --version
+php -v
+composer --version
+node -v
+npm -v
+```
+
+Composerがインストールされていない場合、Ubuntu / WSLでは以下でインストールできます。
+
+```bash id="r7z5n1"
+sudo apt update
+sudo apt install composer
+```
+
+---
+
 ## 1. リポジトリをクローン
 
-```bash
+```bash id="p0m2f8"
 git clone https://github.com/Naruyama628/BookShelf.git
 ```
 
-```bash
+プロジェクトディレクトリへ移動します。
+
+```bash id="r6v8q4"
 cd BookShelf
 ```
 
 ---
 
-## 2. Composerパッケージをインストール
+## 2. PHPパッケージをインストール
 
-```bash
+Composerを使用してLaravelに必要なパッケージをインストールします。
+
+```bash id="g9c4t2"
 composer install
+```
+
+正常に完了すると、プロジェクト内に `vendor` ディレクトリが作成されます。
+
+```text id="mzq1b8"
+BookShelf/
+├── app/
+├── vendor/
+├── artisan
+├── composer.json
+├── compose.yaml
+└── ...
 ```
 
 ---
 
-## 3. 環境変数ファイルを作成
+## 3. `.env` を作成
 
-```bash
+`.env.example` をコピーします。
+
+```bash id="k3x7s5"
 cp .env.example .env
 ```
 
 ---
 
-## 4. Dockerコンテナを起動
+## 4. Laravel Sailを起動
 
-```bash
+Dockerコンテナをバックグラウンドで起動します。
+
+```bash id="d8h2n6"
 ./vendor/bin/sail up -d
+```
+
+起動状態を確認します。
+
+```bash id="w5f9j3"
+./vendor/bin/sail ps
+```
+
+本プロジェクトでは主に以下のコンテナを使用します。
+
+```text id="b4y7c1"
+laravel.test    Laravel / PHP
+mysql           MySQL
+phpmyadmin      phpMyAdmin
 ```
 
 ---
 
 ## 5. APP_KEYを生成
 
-```bash
+Laravelの暗号化などで使用するApplication Keyを生成します。
+
+```bash id="u2k8p4"
 ./vendor/bin/sail artisan key:generate
 ```
 
 ---
 
-## 6. データベースを作成
+## 6. データベースを構築
 
-```bash
+Migrationを実行します。
+
+```bash id="a6e3r9"
 ./vendor/bin/sail artisan migrate
 ```
 
-Seederも実行する場合：
+初期データも登録する場合は、
 
-```bash
+```bash id="f1t5v7"
 ./vendor/bin/sail artisan db:seed
 ```
 
-データベースを作り直してSeederまで実行する場合：
+データベースを一度初期化して、MigrationとSeederをまとめて実行する場合は、
 
-```bash
+```bash id="q9n4l2"
 ./vendor/bin/sail artisan migrate:fresh --seed
 ```
 
-> `migrate:fresh` は既存テーブルをすべて削除するため、保存されているデータも削除されます。
+> `migrate:fresh` は既存テーブルをすべて削除してから再作成します。既存データも削除されるため注意してください。
 
 ---
 
 ## 7. フロントエンドパッケージをインストール
 
-```bash
+Node.jsの依存パッケージをインストールします。
+
+```bash id="c7m2z8"
 npm install
 ```
 
@@ -388,42 +462,160 @@ npm install
 
 ## 8. Viteを起動
 
-```bash
+開発用のViteサーバーを起動します。
+
+```bash id="h4s9x1"
 npm run dev
+```
+
+開発中は、このターミナルを起動したままにします。
+
+---
+
+## 9. アプリケーションへアクセス
+
+ブラウザから以下へアクセスします。
+
+```text id="y8d3k6"
+http://localhost
+```
+
+phpMyAdmin：
+
+```text id="j2f7r4"
+http://localhost:8080
 ```
 
 ---
 
-# テスト
+# 2回目以降の起動
 
-PHPUnitによるFeature Testを実装しています。
+初回の環境構築が完了している場合、毎回 `composer install` や `migrate` を実行する必要はありません。
 
-現在の主なテスト：
+Dockerを起動します。
 
-```text
-AuthApiTest.php
-BookApiTest.php
-BookTest.php
-FavoriteTest.php
-GenreTest.php
-RankingTest.php
-ReadingPlanReminderTest.php
-ReadingPlanTest.php
-ReportTest.php
-ReviewLikeTest.php
-ReviewTest.php
+```bash id="l5p1v9"
+./vendor/bin/sail up -d
 ```
 
-テスト実行：
+Viteを起動します。
 
-```bash
+```bash id="n3c8w2"
+npm run dev
+```
+
+終了する場合：
+
+```bash id="t7q4m6"
+./vendor/bin/sail down
+```
+
+---
+
+# テスト実行
+
+Feature Test / Unit Testは以下で実行できます。
+
+```bash id="v9e2s5"
 ./vendor/bin/sail artisan test
 ```
 
-PHPUnitを直接実行：
+PHPUnitを直接実行する場合：
 
-```bash
-./vendor/bin/sail
+```bash id="x1k6d8"
+./vendor/bin/sail php vendor/bin/phpunit
+```
+
+---
+
+# 環境構築の流れ
+
+```text id="f4r8n3"
+git clone
+    ↓
+cd BookShelf
+    ↓
+composer install
+    ↓
+cp .env.example .env
+    ↓
+./vendor/bin/sail up -d
+    ↓
+./vendor/bin/sail artisan key:generate
+    ↓
+./vendor/bin/sail artisan migrate:fresh --seed
+    ↓
+npm install
+    ↓
+npm run dev
+    ↓
+http://localhost
+```
+
+## トラブルシューティング
+
+### `composer: command not found`
+
+```text id="k6z2p7"
+Command 'composer' not found
+```
+
+Composerがインストールされていません。
+
+Ubuntu / WSLの場合：
+
+```bash id="b8m5q1"
+sudo apt update
+sudo apt install composer
+```
+
+インストール後に確認します。
+
+```bash id="r3h7v9"
+composer --version
+```
+
+その後、再度実行します。
+
+```bash id="s1n4c8"
+composer install
+```
+
+---
+
+### `./vendor/bin/sail: No such file or directory`
+
+`vendor` がまだ作成されていない可能性があります。
+
+```bash id="p9d2f5"
+composer install
+```
+
+を先に実行してください。
+
+---
+
+### Dockerが起動しない
+
+Docker Desktopが起動していることを確認した上で、
+
+```bash id="w7k3m1"
+docker --version
+docker ps
+```
+
+を確認してください。
+
+---
+
+### データベースを最初から作り直したい
+
+```bash id="e5v8q2"
+./vendor/bin/sail artisan migrate:fresh --seed
+```
+
+を実行します。
 
 # ER図
+
 ![ER図](ER.png)
